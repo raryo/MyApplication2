@@ -36,6 +36,7 @@ import android.app.Application
 
 
 
+
 class MainActivity : AppCompatActivity() {
 
     // Y軸最低スワイプ距離
