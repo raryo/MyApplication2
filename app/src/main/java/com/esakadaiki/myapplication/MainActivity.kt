@@ -226,6 +226,8 @@ internal class CustomSurfaceView(context: Context) : SurfaceView(context), Surfa
     var curryG : Int = 0
     var curryB : Int = 0
 
+    private var countInterface: Interface? = null
+
     init {
 
         holder.addCallback(this)
@@ -323,6 +325,10 @@ internal class CustomSurfaceView(context: Context) : SurfaceView(context), Surfa
 
         private val rectWidth = 50f
         private val rectHeight = 50f
+    }
+
+    interface countInterface(){
+        fun getcount()
     }
 
 }
