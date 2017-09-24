@@ -1,17 +1,36 @@
 package com.esakadaiki.myapplication
 
+import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import android.view.View
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Paint
 import android.util.Log
-import android.view.MotionEvent
 import java.util.Calendar
 import android.view.GestureDetector.SimpleOnGestureListener
-import android.view.GestureDetector
 import android.os.Handler
+import android.view.*
+import android.graphics.PorterDuff
+import android.view.SurfaceHolder
+import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.FILL_PARENT
+import android.widget.LinearLayout.LayoutParams;
+import android.widget.LinearLayout
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Rect
+import android.graphics.RectF
+import android.app.Application
+
+
+
+
+
+
 
 
 
@@ -29,15 +48,37 @@ class MainActivity : AppCompatActivity() {
     // タッチイベントを処理するためのインタフェース
     private var mGestureDetector: GestureDetector? = null
 
-    var touch_count = 0
     val handler = Handler()
     var timeValue = 0
+    var touch_count = 0
+
+    //var mSurfaceView: CustomSurfaceView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        Log.v("check", "onCreate")
+
+        // View
+        setContentView(CustomSurfaceView(this))
+
+        Log.v("check", "setContentView")
+
+        val view = this.layoutInflater.inflate(R.layout.activity_main, null)
+        addContentView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+
 
         mGestureDetector = GestureDetector(this, mOnGestureListener)
+
+        Log.v("check", "GestureDetector")
+
+
+
+        // SurfaceViewの用意
+        /*
+        val view = layoutInflater.inflate(R.layout.activity_main, null)
+        addContentView(view, LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT))
+                */
 
         val touchCount = findViewById(R.id.touchCount) as TextView
         val timeText = findViewById(R.id.timeText) as TextView
@@ -48,6 +89,7 @@ class MainActivity : AppCompatActivity() {
         val runnableCountText = object : Runnable {
             override fun run() {
                 touchCount.text = touch_count.toString()
+                startButton.text = "RESTART"
                 handler.postDelayed(this, 1)
             }
         }
@@ -72,8 +114,13 @@ class MainActivity : AppCompatActivity() {
 
         // startボタン
         startButton.setOnClickListener(){
+            handler.removeCallbacks(runnableTime)
+            handler.removeCallbacks(runnableCountText)
+            touchResult.text = ""
+
             handler.post(runnableTime)
             touch_count = 0
+            timeValue = 0
             handler.post(runnableCountText)
         }
 
@@ -139,6 +186,7 @@ class MainActivity : AppCompatActivity() {
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
             Log.v("check", "singletapup")
             touch_count++
+            Log.v("check", "count")
             return super.onSingleTapUp(e)
         }
     }
@@ -155,6 +203,125 @@ class MainActivity : AppCompatActivity() {
             val s = remainingTime % 60
             "%1$02d:%2$02d:%3$02d".format(h, m ,s)
         }
+    }
+
+}
+
+// SurfaceView
+internal class CustomSurfaceView(context: Context) : SurfaceView(context), SurfaceHolder.Callback, Runnable {
+    var thread: Thread? = null
+    var isAttached: Boolean = false
+
+    private var dx = 5f
+    private var dy = 5f
+    private var screenWidth: Float = 0.toFloat()
+    private var screenHeight: Float = 0.toFloat()
+    private var xOffset = 0f
+    private var yOffset = 0f
+
+    var res = this.context.resources
+    var curry_dish = BitmapFactory.decodeResource(res, R.drawable.curry_dish2)
+    var curryR : Int = 0
+    var curryG : Int = 0
+    var curryB : Int = 0
+
+    init {
+
+        holder.addCallback(this)
+    }
+
+    // Bitmapの拡大率を計算する
+    private fun calcBitmapScale(canvasWidth: Int, canvasHeight: Int, bmpWidth: Int, bmpHeight: Int): Float{
+        var scale: Float = canvasWidth.toFloat() / bmpWidth.toFloat()
+        var tmp = bmpHeight * scale
+        /*
+        if(tmp < canvasHeight){
+            scale = canvasHeight.toFloat() / bmpHeight.toFloat()
+            return scale
+        }
+        */
+        return scale
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int,
+                                height: Int) {
+        screenWidth = width.toFloat()
+        screenHeight = height.toFloat()
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        isAttached = true
+        thread = Thread(this)
+        thread?.start()
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        isAttached = false
+        while (thread!!.isAlive);
+    }
+
+    override fun run() {
+        while (isAttached) {
+            Log.v("SurfaceViewSample3", "run")
+
+            if (xOffset < 0 || xOffset + rectWidth > screenWidth)
+                dx = -dx
+            if (yOffset < 0 || yOffset + rectHeight > screenHeight)
+                dy = -dy
+            xOffset += dx
+            yOffset += dy
+
+            doDraw(holder)
+        }
+    }
+
+    private fun doDraw(holder: SurfaceHolder) {
+        val canvas = holder.lockCanvas()
+
+        // この間にグラフィック描画のコードを記述する。
+
+        // 画像のサイズを画面に合わせる
+        var canvasWidth = canvas.getWidth()
+        var canvasHeight = canvas.getHeight()
+
+        val bmpWidth = curry_dish.getWidth()
+        val bmpHeight = curry_dish.getHeight()
+
+        val toCanvasScale = calcBitmapScale(canvasWidth,canvasHeight,bmpWidth,bmpHeight)
+
+        val diffX: Float = (bmpWidth * toCanvasScale - canvasWidth)
+        val diffY: Float = (bmpHeight * toCanvasScale - canvasHeight)
+
+        val addX: Float = (diffX / toCanvasScale) / 2
+        val addY: Float = (diffY / toCanvasScale) / 2
+        // 画像のサイズ合わせここまで
+
+        val paint = Paint()
+        paint.color = Color.GREEN
+
+        canvas.drawColor(Color.WHITE)
+        canvas.drawRect(xOffset, yOffset, xOffset + rectWidth, yOffset + rectHeight, paint)
+
+        val rSrc = Rect(addX.toInt(), addY.toInt(), ((canvasWidth / toCanvasScale) + addX).toInt(), ((canvasHeight / toCanvasScale) + addY).toInt())
+        val rDest = RectF(0f, 0f, canvasWidth.toFloat(), canvasHeight.toFloat())
+
+        paint.color = Color.rgb(150+(255/(255)),100,50)
+        paint.setStyle(Paint.Style.FILL)
+        var rectf = RectF(((canvasWidth / 2) - bmpWidth * toCanvasScale / 3).toFloat(), ((canvasHeight / 2) - bmpHeight * toCanvasScale / 3).toFloat(), ((canvasWidth / 2) + bmpWidth * toCanvasScale / 3).toFloat(), ((canvasHeight / 2) + bmpHeight * toCanvasScale / 3).toFloat())
+        canvas.drawOval(rectf, paint)
+
+        canvas.drawBitmap(curry_dish, rSrc, rDest, paint)
+
+        // この間にグラフィック描画のコードを記述する。
+
+        holder.unlockCanvasAndPost(canvas)
+    }
+
+    companion object {
+
+
+        private val rectWidth = 50f
+        private val rectHeight = 50f
     }
 
 }
