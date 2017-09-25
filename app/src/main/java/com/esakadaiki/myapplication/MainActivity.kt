@@ -27,16 +27,6 @@ import android.graphics.RectF
 import android.app.Application
 
 
-
-
-
-
-
-
-
-
-
-
 class MainActivity : AppCompatActivity() {
 
     var touch_count = 0
@@ -46,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     private val SWIPE_THRESHOLD_VELOCITY = 200
     // X軸の移動距離 これ以上なら縦移動を判定しない
     private val SWIPE_MAX_OFF_PATH = 200
-    private var g_View: View? = null
+
 
     // タッチイベントを処理するためのインタフェース
     private var mGestureDetector: GestureDetector? = null
@@ -68,9 +58,7 @@ class MainActivity : AppCompatActivity() {
         Log.v("check", "setContentView")
 
         val view = this.layoutInflater.inflate(R.layout.activity_main, null)
-        g_View = view
         addContentView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-
 
         mGestureDetector = GestureDetector(this, mOnGestureListener)
 
@@ -191,7 +179,7 @@ class MainActivity : AppCompatActivity() {
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
             Log.v("check", "singletapup")
             touch_count++
-            mSurfaceView?.curry_color?.plus(20)
+            mSurfaceView?.curry_color = mSurfaceView?.curry_color!! + 10
             Log.v("check", "${touch_count}")
             return super.onSingleTapUp(e)
         }
