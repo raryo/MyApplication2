@@ -124,7 +124,7 @@ return scale
 
 
     fun add_spice () {
-        curry_color++
+        curry_color += 10
     }
 
     companion object {
