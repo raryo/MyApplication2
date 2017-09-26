@@ -179,7 +179,7 @@ class MainActivity : AppCompatActivity() {
         override fun onSingleTapUp(e: MotionEvent?): Boolean {
             Log.v("check", "singletapup")
             touch_count++
-            mSurfaceView?.curry_color = mSurfaceView?.curry_color!! + 10
+            mSurfaceView?.add_spice()
             Log.v("check", "${touch_count}")
             return super.onSingleTapUp(e)
         }

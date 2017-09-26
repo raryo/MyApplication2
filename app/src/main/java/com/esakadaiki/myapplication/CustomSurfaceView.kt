@@ -122,6 +122,11 @@ return scale
         holder.unlockCanvasAndPost(canvas)
     }
 
+
+    fun add_spice () {
+        curry_color++
+    }
+
     companion object {
 
 
